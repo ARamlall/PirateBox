@@ -1,0 +1,39 @@
+Technical FAQ
+Enabling PirateBox for startup seems not to work.
+Some USB Sticks take a while until they are available. PirateBox Scripts try initialize the wifi card directly. If the card is not available, it can be useful to enable a wait-time until the device become available. To enable this device-polling run
+
+sed -i 's|PROBE_INTERFACE="no"|PROBE_INTERFACE="yes"|g' /opt/piratebox/conf/piratebox.conf
+The next reboot should work. If not, please report back to the forums.
+
+
+PirateBox does not work after system upgrade
+The PirateBox RaspberryPi images are Archlinux based. In case you want to install additional software, it might be handy to run the upgrade commands:
+
+pacman -Syu
+Sometimes the packages changes, so recently the dnsmasq package will now auto enable itself. So make sure that dnsmasq is properly disabled and stopped after installing your software:
+
+systemctl stop dnsmasq
+systemctl disable dnsmasq
+You might consider restarting PirateBox after your activities:
+
+systemctl restart piratebox
+
+Additional Support
+For general questions about the PirateBox project, please refer to the FAQ page.
+
+For additional support, please visit the PirateBox Forum.
+
+Please note: Before posting on the forum, please review this article on “How To Ask Questions The Smart Way”.
+
+Key recommendations include:
+
+Use meaningful, specific subject headers
+Be explicit about your question
+Be precise and informative about your problem
+Grovelling is not a substitute for doing your homework
+Describe the problem's symptoms, not your guesses
+Describe your problem's symptoms in chronological order
+Describe the goal, not the step
+Don't ask people to reply by private e-mail or private message
+Courtesy never hurts, and sometimes helps
+Follow up with a brief note on the solution if you find one
