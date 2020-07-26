@@ -1,0 +1,139 @@
+Technical FAQ
+I can not execute command 'X' from the 'Post Installation' guide
+First of all, double check if you typed in the command correctly. If so, your box is maybe not done with installation. The first clue is, that your command line looks like this root@OpenWrt:~#. The hostname is still OpenWrt, which is changed during a successful installation (to 'piratebox' with v1.0, something else from v1.1).
+
+
+It seems my installation is still running, what went wrong?
+If your box is online for more than 45 minutes, you may take a look into it in order to see what is going on. When you telnet into the box, like described in the installation guide, and execute the command ps, you have a long multiple line output. If you are able to spot a line including “opkg”, then everything is fine and it will just take another while to finish. You can watch the installation using the following command (use CTRL+C to exit this command):
+
+tail -f /var/log/messages
+If you can't find opkg line, perhaps that your installation is stuck in detecting the USB stick. That can happen if the USB stick does not have a proper partition table, the symptom is that in the system the device appears only as /dev/sda instead of /dev/sda1. When you run tail /var/log/messages you are able to spot a long dotted line, which means “Searching for USB”. You can verify the assumption by using the command ls /dev/sd*. If you see /dev/sda, /dev/sda1 and /dev/sda2 you might need to repartition the USB stick in MSDOS mode, please follow the next section “HowTo format my USB stick correctly”. If you see only /dev/sda you might have an USB partition problem. The quickest solution is to change the PirateBox configuration to use the USB stick without the partition one indicate. To do so, run the following commands:
+
+sed -i 's;sda1;sda;' /etc/ext.config 
+reboot & exit
+After executing those lines, the box will log you off and reboot. After the reboot is done, the installation tries to use /dev/sda only. See the Tail command above to watch the installation progress. If you still have trouble, please post in the PirateBox Forum and include the output of the technical summary below.
+
+
+HowTo format my USB stick correctly?
+PirateBox is a pretty bare metal tool. Newer operating systems, like Windows 10, are creating new partitions in GPT mode, but PirateBox needs an MBR mode based partition format. The first Partition needs to be the whole partition and the partition type is required as “FAT32”. If you are running under a modern Windows, it is not easy to configure the USB stick in that way. It is recommended to use an additional tool named "Rufus", which can be obtained here.
+
+The options for formatting the USB Stick are:
+
+Partition scheme: MBR
+File system: FAT32
+Attention: When executing this tool, this will remove all data on the USB stick! After formatting, please copy again the install folder to the USB stick then reboot your PirateBox. In some cases, it is needed to follow this tutorial in addition: Reflash PirateBox with auto_flash function.
+
+
+When I connect to the PirateBox SSID, I can still access my network, but not to the PirateBox.
+When you just finished your PirateBox installation, and you have your network cable still plugged into your PirateBox, you can not access the PirateBox. The PirateBox 'recognizes' that your home network is active and reroutes server IPs to your WIFI-client, the result is not having access to the PirateBox and Internet is working.
+
+
+I can't access my PirateBox, is it bricked?
+In the most cases it isn't. The first step is to try to use a normal Ethernet connection (via wire) and a static IP address on the client side, which should be 192.168.1.2 (and maybe the subnet mask 255.255.255.0). That helps in some cases to get again access and do further steps. If the normal way does not help you, follow these steps to access the failsafe mode, then compare your output to "Example output for technical questions". Enter each of the commands on the linked page, note the differences, and ask for support on the PirateBox Forum or IRC channel (If your PirateBox responds at all to these commands, there's hope!)
+
+
+But all network access failed, do I have to throw it away?
+If you have tried both the above steps, and asked for help on the forum, and still have an unresponsive device, you may be able to recover your device (with a little surgery) via serial access: Recover bricked TL-MR3020 Wireless N Router, an example based on the MR3020.
+
+
+Why has the USB stick be FAT32? What is with that limitations?
+The most of the operating systems can handle FAT32 filesystems, which makes it the best choice for the common user. However using FAT32 limits the files size to a maximum of 4GB. Because the USB Stick is mounted with the filetype, you can not simply change the filesystem to one of your favor. Sorry, we plan this feature for the future.
+
+
+I get error messages while running opkg update
+Depending on the error message several things can be wrong:
+
+Internet-Connection not correctly configured
+Old image used with obsolete URLs
+
+I think I have no internet connection on my PirateBox, what am I doing wrong?
+If you already installed PirateBox, please follow the hints about 'nodns'. If not, it has to be figured out which configuration is wrong. You can achieve that by running the following commands:
+
+ping -n 2 8.8.8.8
+ping -n 2 google.com
+If the first one failed, you have to double-check your gateway entry in /etc/config/network. If the second command fails, something is wrong with the DNS entry in the already mentioned configuration file.
+
+
+I want to install further software to my PirateBox, but it seems I can't connect to the internet. What is wrong?
+During the first days of PirateBox we had some problems with wrong entries in the network configuration. To overcome this issue, PirateBox contains a fix, which gets activated during bootup. This fix redirects all requests on the box itself to the running PirateBox-Software. Assuming you did you configuration in /etc/config/network correctly, run
+
+/etc/init.d/piratebox nodns
+This command disables that fix, and ping google.com should point not to 192.168.1.1 anymore.
+
+
+I want to start from the beginning with flashing my device, but I don't have access to it anymore. What can I do?
+You can try to reflash the device via failsafe mode and use an USB stick as data source. If you had installed an image that does not include the USB drivers, you may try advanced solution with copying the file over the network.
+
+
+I get error "No space left on device" while installing additional packages, what is wrong?
+The “disk”-space of the small OpenWRT routers are usually very limited. The PirateBox package does a few tricks to overcome this issue: we install the software into something called “installation destination”. If you want to install more softwares on your router, you have to run the opkg command with the parameter -d <destination>.
+
+The following is valid for PirateBox 0.6 and below:
+
+opkg install -d piratebox <package name>
+With PirateBox 1.0 we changed the destination name to a more common name:
+
+opkg install -d ext <package name>
+If you still encounter this problem, you might have already exhaust your root diskspace (working directory for opkg) or the installation directory is really out of space (the last reason usually occur on trunk images running an “opkg upgrade”).
+
+
+How can I restore the original firmware?
+The process to restore the original firmware to your OpenWRT device can be different for each device, please refer to the OpenWRT wiki for that, i.e. Restoring for MR3020. Restoring back to the stock TP-Link causes the most bricks in our forum, so do a clever consideration or ask in the forum.
+
+
+When using SSH, it seems that my Box does not accept the password
+When using SSH on a Mac or Linux system, do not forget root@192.168.1.1 . The root@ is required, because ssh will try to login via the user “root”. If you miss that part out, the ssh command will use the user you are currently logged in.
+If it still does not work, try to use telnet 192.168.1.1. If that work and you already used passwd to setup a password, something went wrong while flashing. Try to reflash the device with the openwrt*.bin file, or open up a forum post for clarification.
+
+
+I removed all the files from my USB stick and I'm not able to connect anymore. Is it bricked?
+Don't panic. If you only removed the files on the USB Stick, the Box is using all the configuration, which was moved from the original system to the USB stick. This is the reason why you can't connect easily anymore: the DHCP server is not working anymore.
+In the most situation, it could be the easiest solution to simply reflash the device:
+
+For PirateBox 1.1 devices, you can use the Reflash PirateBox with auto_flash function-HowTo.
+For older PirateBox: copy your firmware image file and a copy your unzipped install folder, then follow this Reflash using an USB Stick-HowTo. Please plugin the USB only after you successfully logged in via failsafe mode.
+My USB stick died, how to restore my PirateBox ?
+Use the instructions above.
+
+
+Additional Support
+For general questions about the PirateBox project, please refer to the FAQ page.
+
+For additional support, please visit the PirateBox Forum.
+
+Please note: Before posting on the forum, please review this article on “How To Ask Questions The Smart Way”.
+
+Key recommendations include:
+
+Use meaningful, specific subject headers
+Be explicit about your question
+Be precise and informative about your problem
+Grovelling is not a substitute for doing your homework
+Describe the problem's symptoms, not your guesses
+Describe your problem's symptoms in chronological order
+Describe the goal, not the step
+Don't ask people to reply by private e-mail or private message
+Courtesy never hurts, and sometimes helps
+Follow up with a brief note on the solution if you find one
+Technical summary
+If asked, please post the output of the following commands:
+
+ mount
+ ls -la /mnt/ 
+ ls -la /mnt/usb 
+ ls -la /mnt/usb/PirateBox 
+ ls -la /mnt/usb/install   
+ ls -la /opt/piratebox 
+ ls -la /opt/piratebox/www
+ cat /etc/pbx_custom_image
+ cat /etc/openwrt_release
+ cat /opt/piratebox/version
+ cat /opt/piratebox/tmp/error.log   
+ cat /opt/piratebox/tmp/break.log   
+ cat /etc/config/network
+ cat /etc/config/wireless
+ dmesg | tail -n 20 
+ dmesg | grep sda
+ ls /dev/sd*
+ ps
+ tail -n 200 /mnt/usb/install.log 
