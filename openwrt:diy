@@ -1,0 +1,158 @@
+PirateBox 1.1 OpenWrt DIY
+PirateBox is an anonymous offline mobile file-sharing and communications system built with free software and inexpensive off-the-shelf hardware. You can use it to transform any space into a free and open offline communications and file sharing network. Learn more about PirateBox on our FAQ page!
+
+Install PirateBox 1.1
+The following instructions are for installing PirateBox 1.1 on a new TP-Link router (MR3020 or MR3040) or GliNet router which is running the factory installed firmware. Note: If you have already installed OpenWrt on your router or if you are already running an older version of PirateBox on your router, skip to the Upgrade PirateBox section below.
+
+If you have OpenWRT on a device other than the above routers, you can try your luck with the Manual method.
+For support, be sure to check out the PirateBox OpenWrt page and the OpenWrt discussion board on our PirateBox Forum.
+
+Stuff You'll Need
+1. Wireless router (one of the following):
+
+TP-Link MR3020 (Amazon) (Newegg) (eBay) Newer MR3020 Models aren't possible to be flashed with PirateBox anymore.
+TP-Link MR3040 (Amazon) (Newegg) (eBay) (Be careful:!: only v1 & v2 models are supported)
+GLiNet Router (Amazon) , GliNet Router with external antenna (Amazon)
+Other You can find additional supported hardware on our Hardware Recommendations page but please note that this hardware is not covered under this HowTo and thus your mileage may vary.
+2. USB Flash Drive (formatted FAT32 with a single partition). The Kingston DT 16GB works well: (Amazon) (Newegg)
+
+Note: a better-performing USB 2.0 flash drive is recommended, as a USB 3.0 drive may draw too much current, and a slower USB 2.0 drive may result in your PirateBox locking up during moderate-to-heavy or long-term use.
+
+3. Ethernet cable (this may come with your wireless router)
+
+4. Computer with ethernet port
+
+5. 5V/USB Battery (optional)
+
+Auto-Installation
+1. Download Software
+
+Download the following two files to your computer:
+
+a) A copy of install_piratebox.zip.
+
+b) Our customized copy of OpenWrt (be sure to download the “*squashfs-factory.bin” file that corresponds with your specific device): http://stable.openwrt.piratebox.de/auto
+
+Important: Be sure to use one of the OpenWrt images files linked above! They are customized to work together with the install_piratebox.zip. If you use a different image-file, you will not be able to use this automatic installation!
+
+2. Prepare USB Flash Drive
+
+a) Extract the install_piratebox.zip file (double click on it) then drag the “install” folder over to your USB flash drive.
+
+b) SAFELY REMOVE your USB drive from your computer, then plug the USB stick into your OpenWrt router.
+
+3. Prepare your Router
+
+a) Set the toggle switch located beside the LAN/WAN port on the router to 3G mode, if a such switch is available.
+
+b) Connect the router via Ethernet cable to your computer then power up the router (Make sure the router is connected to a power supply).
+
+4. Install Software
+
+a) Once the router is running and you are connected to it via Ethernet cable, open a web browser and visit the following address:
+
+MR3020: http://192.168.0.254
+MR3040: http://192.168.0.1
+GLiNet: http://192.168.8.1
+b) Enter the default username & password (admin & admin). Note: For the GLiNet router you will need to select a language, time zone, and password.
+
+c) Navigate to System Tools > Firmware Upgrade then select the OpenWRT firmware file that you downloaded to your computer during the first step above. Note: For the GLiNet router you should navigate to: Firmware > Upload Firmware
+
+d) Select upgrade. Note: For the GLiNet router, you must make sure the flag “keep settings” is not ticked.
+
+e) After the upgrade completes, the router will restart.
+
+Important: You should wait 15-20 minutes for the installation to complete (for slower USB flash drives, it may take up to 45 minutes - be patient!). Your device will reboot a couple of times during the installation. The device is finished with the installation when the LEDs stay (relatively) steady. If the lights are blinking on a regular frequency, then the installation is still running, after 45 minutes you should check out our OpenWrt Troubleshooting.
+
+Note: The Web Admin page for your router will “time out” during the installation process. This is normal and happens because the IP address for OpenWrt defaults to 192.168.1.1 which differs from the original Web Admin IP address for your router. Please do not try to visit 192.168.1.1 during the installation process as PirateBox is not shipped with a default Web Admin page and visiting this IP could interfere with the installation.
+
+5. Next Steps
+
+a) Once the installation is complete, open a terminal window (for OS X, go to Applications > Utilities > Terminal; for Windows, install and open PuTTY, make sure Telnet is selected for Connection Type), and telnet to the device:
+
+telnet 192.168.1.1
+b) You can now follow the Post-Installation instructions below to finish the installation.
+
+Upgrade PirateBox
+Please Note: The instructions below are specifically for the TP-Link MR3020, TP-Link MR3040, and the GLiNet routers.
+
+The upgrade process is different according the PirateBox version running on your router (to know it):
+
+if version 0.6 and below is installed: you should follow the Update a very old PirateBox-HowTo.
+if version 1.0.* is installed: you should follow the Update from PirateBox 1.0 -HowTo.
+if version 1.1.* is installed: the following instructions should get you up and running in a flash (literally!).
+1. Download Software
+
+Download the following two files to your computer:
+
+a) A copy of install_piratebox.zip.
+
+b) A customized copy of OpenWrt (be sure to download the “*squashfs-factory.bin” file that corresponds with your specific device) http://stable.openwrt.piratebox.de/auto
+
+Important: Be sure to use one of the OpenWrt images linked above! They are customized to work together with the install.zip. If you use a different image-file, you won't be able to use this automatic installation!
+
+2. Install Custom OpenWrt
+
+a) Create a folder on your USB flash drive called auto_flash.
+
+b) Drag the “*squashfs-factory.bin” file to this new folder auto_flash (you don't need to extract this file first!).
+
+c) Remove the old install folder.
+
+d) Some features are in the frontend. If you want these features, you need to remove the folder called “content” from your USB flash drive. This folder can be found under “PirateBox”. You want to backup custom changes before doing that.
+
+e) Copy over the expanded install folder to your USB stick (take care the folders are not duplicate).
+
+f) Now SAFELY REMOVE your USB drive from your computer and plug the USB stick into your OpenWrt router.
+
+g) Put the USB stick to your PirateBox and power the router on. This will trigger the installation of the new packages. Note: You should wait 15-20 minutes for the installation to complete (depending upon your USB flash drive, it may take up to 45 minutes - be patient!). Your device will reboot a couple of times during the installation.
+
+4. Next Steps
+
+a) Once the installation is complete, you can use telnet to connect to the device:
+
+telnet 192.168.1.1
+b) You can now follow the Post-Installation instructions below to finish the installation.
+
+Post-Installation
+Once you have installed or upgraded PirateBox, you can follow these final steps to set a password, activate the Kareha Image and Discussion Board and configure and start the UPnP media server.
+
+1. Setup
+
+a) If you're not already connected to your PirateBox, join the “PirateBox: Share freely” wireless network, open a terminal window (for OS X, go to Applications > Utilities > Terminal; for Windows, install and open PuTTY) and telnet into your PirateBox:
+
+telnet 192.168.1.1
+b) Run the following command to start the setup-menu
+
+box_init_setup.sh
+c) Create a password for the administrative root access. Choose “Option 1”, then enter your password twice. Notice: It is not shown while entering it. Write your password somewhere because you will not need it before several months (ie: PirateBox upgrade).
+
+Note: Once you have created a password for your PirateBox, telnet will be disabled. This means that in the future you will need to use the following command to access your PirateBox from the terminal:
+
+ssh root@192.168.1.1
+d) Activate the “timesave function” by selecting “Option 2” and entering the current date and time.
+
+2. Kareha Image and Discussion Board
+
+a) To activate your imageboard, run the following command:
+
+ /opt/piratebox/bin/board-autoconf.sh
+b) Enter your password, after you are prompted, then you are done.
+
+3. UPnP Media Server
+
+a) Activate the UPnP Media Server by copying over the config file:
+
+cp /opt/piratebox/src/openwrt.example.minidlna /mnt/ext/etc/config/minidlna
+Note: Optionally, you can edit the config file (change the display name, etc) with:
+
+vi /etc/config/minidlna
+b) Start the UPnP Media Server with:
+
+/etc/init.d/minidlna start
+/etc/init.d/minidlna enable  
+Note: Any media files uploaded to your PirateBox will now automatically stream across your PirateBox wireless network. You will need a UPnP client in order to play these files. Check out our Streaming Media page for more info.
+
+4. Next Steps
+
+Your PirateBox 1.1 should be ready to use! 
