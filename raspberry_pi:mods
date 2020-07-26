@@ -1,0 +1,176 @@
+Raspberry Pi(rate)Box Mods
+For the Raspberry all the PirateBox Laptop Mods apply. Here are additional other howtos.
+
+Additional Mods:
+
+Set up Single File PHP Gallery
+RaspberryPI Shutdown button via GPIO
+PirateBox Mods for PirateBox itself and not RPi or one-chip specific.
+A very hardcore plain howto to get Mesh on RPi up and running: Mesh RPi
+Switch used wifi adapter
+Especially on RPi3 some owners want to switch over to an external Wifi card over the internal. The same is true, if you want to use two wifi cards for some reasons. With 1.1.3 there is an option to prioritize a wifi card. The file /boot/wifi_card.conf (can be accessed on Windows too) you define the PirateBox-wifi-card. On RPi3 the onboard wifi is usually wlan0, while the first USB wifi is wlan1. If you want to use multiple USB cards or you have issues with alternating links between wlan0 and the real device, you might need to create a udev rule to assign static names. Tipp: Use names with wlan_ that other wifi-udev-rules are working.
+
+Temporary client mode
+:!: On 1.1.3 is a bug, that the command is not executed correctly, run the following lines once to fix that:
+
+sed -i -e 's|/rpi/run_client.sh|/rpi/bin/run_client.sh|g'  \
+   /opt/piratebox/rpi/bin/do_switch_client.sh
+Since 1.1.3, it is possible to switch from AP to client mode with a command. Before booting your RPi Piratebox, edit the wpa_supplicant.conf file on your computer. After the file is adjusted, boot your PirateBox and connect with it via ssh, like in the post installation. Execute the following command:
+
+ sudo /opt/piratebox/rpi/bin/switch_to_client.sh
+While executing the command, the wifi connection will drop and the ssh session will freeze. This is expected. If you can not connect to your RPi, verify your wpa_supplicant.conf (which you find in /boot - the first SDCard partition). To switch back to normal AP mode, reboot your PI.
+
+If you have issues with resolving hostnames, verify if /etc/resolv.conf has a content (vi,cat). If you get strange error messages, run the following commands
+
+ sudo rm /etc/resolv.conf
+ sudo sh -c 'echo "nameserver 8.8.8.8 >> /etc/resolv.conf"' 
+Activate PHP
+This mod requires PirateBox 1.1.
+
+PHP should be ready to run. To activate PHP on PirateBox, you need to edit /opt/piratebox/conf/lighttpd/lighttpd.conf and remove the # in front of the last line: #include “/opt/piratebox/conf/lighttpd/fastcgi-php.conf”
+
+The can be achieved with the following command, too:
+
+ sed -i -e 's|^#include "/opt/piratebox/conf/lighttpd/fastcgi-php.conf"|include "/opt/piratebox/conf/lighttpd/fastcgi-php.conf"|' \
+   /opt/piratebox/conf/lighttpd/lighttpd.conf
+After this make a reboot. All .php files are processed, as long as these are placed in the /content/ folder. This folder is located in /opt/piratebox/share - on OpenWrt on the USB stick <usb>/PirateBox/.
+
+Disable client isolation
+Per default it is not permitted to connect directly to another client. To allow this, you need to disable the feature “AP isolation”. Connect via SSH and run the following commands:
+
+ sudo sed -i -e 's|ap_isolate=1|#ap_isolate=1|g' /opt/piratebox/conf/hostapd.conf
+ sudo systemctl restart piratebox
+USB FAT-Storage
+You have a FAT32 USB-Stick and want to use it on your Ras-PirateBox?
+
+Notice: Since PirateBox 1.1, there is utility available for automatically enable your USB storage:
+
+ sudo /opt/piratebox/rpi/bin/usb_share.sh 
+Disk usage: Under some circumstances, the USB free storage is not displayed correctly. Try the following command and trigger a refresh via webui: sudo touch -t 197001010101 /opt/piratebox/www/diskusage.html
+
+Manually configure USB
+Login via SSH into your box, or get direct access to it. You need to be logged in as root. The following commands assume that you have a USB Stick with one partition formatted as FAT32 and you want to switch over the complete content to your USB stick.
+
+Connect your USB-Stick to the PirateBox and run the following commands:
+
+ # Create a permanent mount point and mount the USB-Stick
+ sudo sh -c 'echo "/dev/sda1 /mnt/usbdrive vfat uid=nobody,gid=nogroup,umask=0,noatime,rw,user 0 0" >> /etc/fstab'
+ sudo mkdir -p /mnt/usbdrive
+ sudo mount /mnt/usbdrive
+ 
+ # move the shared folder
+ sudo mv /opt/piratebox/share/Shared /mnt/usbdrive
+ sudo ln -s /mnt/usbdrive/Shared /opt/piratebox/share
+ 
+ # move kareha stuff as well
+ sudo mv  /opt/piratebox/share/board/src /mnt/usbdrive/kareha_uploads
+ sudo ln -s /mnt/usbdrive/kareha_uploads /opt/piratebox/share/board/src
+When running the mv commands, you might recieve error messages like failed to preserve ownership for '/mnt/usbdrive/Shared/HEADER.txt': Operation not permitted - this is expected, because FAT does not support file permissions.
+
+Also disable the chown option for droopy in the configuration file
+
+sed -i -e 's|^DROOPY_CHMOD|#DROOPY_CHMOD|' /opt/piratebox/conf/piratebox.conf 
+It is recommended to restart the PirateBox scripts that that droopy(the file upload script) points to the correct folder.
+
+sudo systemctl restart piratebox
+After this all the files should be located on your USB Stick. Take care of it.
+
+If you intend to exchange the USB Stick, copy over the following two folders or create empty ones:
+
+kareha_uploads
+Shared
+Sidenote: If you use multiple USB-Stick, it is strongly discouraged of using /dev/sda1 as a reference for mounting the devices. It may happen, that one of two devices is named sda per random. For circumventing this issue, use the device UUID(Universally Unique Identifier) instead. Follow this instructions for a stable setup.
+
+Enable WPA for the hotspot
+Change the following configuration file /opt/piratebox/conf/hostapd.conf, those options will enable the functionality:
+
+interface=wlan0
+driver=rtl871xdrv 
+ssid=PrivateBox
+hw_mode=g
+channel=1
+ieee80211n=1
+wmm_enabled=0
+wpa=1
+auth_algs=1
+wpa_passphrase=first123
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+macaddr_acl=0
+PirateBox on SDCard
+There is a script available since RPi image for PirateBox 1.1.3 . This script covers all needed steps and eliminates the need for a reboot. Execute the following line to use the free space of the SDCard:
+
+  sudo /opt/piratebox/rpi/bin/sdcard_share.sh
+Manual Setup
+FIXME This howto is not finished nor approved as working FIXME
+
+Currently, there is no script from PirateBox for preparing an SDCard. You can use the new LibraryBox functions for this.
+
+Run the following commands on your PirateBox as root:
+
+wget https://github.com/LibraryBox-Dev/package-arch-librarybox-config/raw/master/lbx_functions.sh
+wget https://raw.githubusercontent.com/LibraryBox-Dev/package-arch-librarybox-config/master/cli_lbx.sh 
+chmod u+x lbx_functions.sh
+chmod u+x cli_lbx.sh
+sudo mv lbx_functions.sh /bin/
+sudo mv cli_lbx.sh /bin/
+sudo cli_lbx.sh do_swapon_step1
+sudo cli_lbx.sh do_ext_step1
+After this, do a reboot. While the reboot the just created partitions will be formatted. After you did this please run the following commands on your PirateBox:
+
+ mv  /opt/piratebox/share/Shared /mnt/sdcard
+ ln -s /mnt/sdcard/Shared /opt/piratebox/share
+ # move kareha stuff as well
+ mv  /opt/piratebox/share/board/src /mnt/sdcard/kareha_uploads
+ ln -s /mnt/sdcard/kareha_uploads /opt/piratebox/share/board/src
+ swapon -a
+Obsolete: Using Alternative HostAPD binaries and drivers (For tested devices)
+Since PirateBox 1.1.3 there is no need for additional hostap. Adjustments are made via /opt/piratebox/rpi/bin/wifi_detect.sh during boot (udev rule).
+
+FIXME This is not complete and is mostly based around a particular model
+
+FIXME This guide is has some Arch specific commands (The pacman stuff) update to include raspbian users
+
+For some wireless adapters you will need to utilize one of the (hopefully) included alternative versions of hostapd for your particular chipset, and driver settings from an (also hopefully) included text file detailing the best settings for hostapd.conf. These are stored in the /prebuild folder.
+
+For this guide we will be going through the steps to get the Edimax EW-7811Un working, but the steps should be the same for any package included under /prebuild/ for whatever adapters those would support. Simply replace the EW-7811Un specific filenames with whichever package matches for your adapter.
+
+So lets get started: First off I will assume you have followed the Raspberry Pi setup guide through step 5. So you should be right before starting and enabling piratebox.
+
+1. Ok, first off cd into the directory /prebuild/hostapd and find the package you need to use. for us Edimax EW-7811Un users, that filename is (at the time of writing) hostapd-8192cu-0.8_rtw_r7475.20130812_beta-3-armv6h.pkg.tar.xz
+
+This package is made specifically to be installed by pacman, Arch's package manager. so run the command:
+
+pacman -U /prebuild/hostapd/hostapd-8192cu-0.8_rtw_r7475.20130812_beta-3-armv6h.pkg.tar.xz
+This installs the correct hostapd version. And we're done with that, easy right?
+
+2. Next up we just need to make sure pacman wont accidentally “update” hostapd with one that breaks us, so we need to edit pacman's config to ignore this package. To do so run:
+
+nano /etc/pacman.conf
+and at the bottom of the file add:
+
+IgnorePkg=hostapd
+Ctl+O, hit enter, and Ctl+X to exit. Now pacman wont ruin our work. Next!
+
+3. Now we simply need to edit hostapd's config file to point to the proper driver, and we'll be basically done. So, first off go to /preload/hostapd/ and look for a text file with the same name as your hostapd package had. open that in nano. Look at the contents of the file, copy them and close the file.
+
+now run:
+
+nano /opt/piratebox/conf/hostapd.conf
+And edit it to match that text file. The main line to edit is the driver line. for the Edimax adapter it should look like this:
+
+interface=wlan0
+driver=rtl871xdrv
+ssid=PirateBox - Share Freely
+hw_mode=g
+channel=1
+ieee80211n=1
+Note that the driver is RTL871XDRV. That first L is not a 1. Be sure to keep it lowercase though. Ctl+O, Enter, Ctl+X to save and close.
+
+4. Now do a reboot,
+
+shutdown -r now
+and once you are back up, go ahead and continue the Raspberry Pi tutorial at Installation section, step 6.
+
+NOTE: For ANY hostapd package you need to use the procedure would be the same, just you probably wont have a nice pacman package made for you like with these ones. (Thanks Matthias for these!) But the process would be, build it from source / find a binary. Replace the installed binary with your new copy. Edit hostapd.conf to use the proper driver. — WACOMalt 2014/11/08 03:52
