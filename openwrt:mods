@@ -1,0 +1,195 @@
+PirateBox Streaming Radio with Icecast
+You can modify your PirateBox to become a streaming PirateBox radio using Icecast. Check out janbre's Icecast tutorial on GitHub and this thread on the PirateBox Forum for more info.
+
+OpenStreetMap on Piratebox
+Peter Rukavina has developed a tutorial for installing a static OpenStreetMap on your PirateBox using Leaflet. Check out his PirateBox + OpenStreetMap GitHub page here and also this PirateBox Forum thread for more info.
+
+Calibre eBook Server on PirateBox
+Thanks to PirateBox Forum member angrygnome, it is possible to set up your PirateBox as a Calibre ebook library server using COPS. Check out this tutorial on the PirateBox Forum for more info.
+
+PirateBox 1.1.x mods
+If not listed separately the documentation of 1.0.x applies.
+
+Activate PHP
+PHP should be ready to run. To activate PHP on PirateBox, you need to edit /opt/piratebox/conf/lighttpd/lighttpd.conf and remove the # in front of the last line: #include “/opt/piratebox/conf/lighttpd/fastcgi-php.conf”
+
+The can be achieved with the following command, too:
+
+ sed -i -e 's|^#include "/opt/piratebox/conf/lighttpd/fastcgi-php.conf"|include "/opt/piratebox/conf/lighttpd/fastcgi-php.conf"|' \
+   /opt/piratebox/conf/lighttpd/lighttpd.conf
+After this make a reboot. All .php files are processed, as long as these are placed in the /content/ folder. This folder is located in /opt/piratebox/share - on OpenWrt on the USB stick <usb>/PirateBox/.
+
+Disable client isolation
+Per default it is not permitted to connect directly to another client. To allow this, you need to disable the feature “AP isolation”. Connect via SSH and run the following commands:
+
+ uci set wireless.@wifi-iface[0].isolate='0'
+ uci commit
+ reboot
+Lighttpd Mods - Piratebox version 1.0.x
+Change SSID
+You can change the SSID with editing the file /etc/config/wireless and then
+
+/etc/init.d/network reload
+your Network settings to make the change active.
+
+Change of IP-Adresses
+/opt/piratebox/conf/piratebox.conf - The following lines:
+ #Network
+ NET=192.168.1
+ 
+And if you want to change the IP of your Box directly, you need to find this line and exchange the 1:
+
+ #IP-SHORT (is stringed together)
+ #  Which IP is your Box??  i.e. 1 => 192.168.77.1
+ IP_SHORT=1
+On OpenWRT you need to change /etc/config/network
+ config interface 'loopback'                                                               
+      option ifname 'lo'                                                                
+      option proto 'static'                                                             
+      option ipaddr '127.0.0.1'                                                         
+      option netmask '255.0.0.0'                                                        
+                                                                                        
+ config interface 'lan'                                                                    
+      option ifname 'eth0'                                                              
+      option type 'bridge'                                                              
+      option proto 'static'      
+ #------  CHANGE THE LINE BELOW -------
+      option ipaddr '192.168.1.1'          
+ #------  CHANGE THE LINE ABOVE -------        
+      option netmask '255.255.255.0'                                                    
+Since 1.1: The next step is to change the referred IP in the firewall configuration. This can be done easily with that command:
+
+sed -i -e 's|192.168.1.1|<new IP>|g' /etc/config/firewall
+As the changes will drop in the connectivity, reboot the box:
+
+reboot
+Small python Forum
+For installing the pyForum named Forest, run:
+
+/opt/piratebox/bin/install_piratebox.sh /opt/piratebox/conf/piratebox.conf pyForum
+Files for the forum are stored in /opt/piratebox/forumspace (which should be Backuped before upgrading).
+
+Currently, there is no reaction on the web-UI after instaling. You can open the Forum using the url: http://piratebox.lan/cgi-bin/forest.py. So you might need to do additional work to fully apply it to your setup.
+
+Secured directories
+With secured directories it is possible to save folder with passwords or simply upload into a folder structure. To enable this feature, find the following lines in /opt/piratebox/conf/piratebox.conf
+
+## Droopy Userdir Option?
+DROOPY_USERDIR=""
+# Uncomment the following line to enable Userdirs
+#DROOPY_USERDIR="-u True"
+Remove the # in the last line and restart your PirateBox-Scripts.
+
+Exchange Upload-Folder
+Do you want, that your users uploads to a different directory than the default directory, where the “Browse” link points to? You can easily achieve this with editing /opt/piratebox/conf/piratebox.conf. Find this line and enter your new upload folder:
+
+#Upload Folder
+# Change this if you want to user uploaded data in a subfolder
+#   Make sure the folder exists
+# UPLOADFOLDER="$FOLDER/Upload"
+UPLOADFOLDER=$FOLDER
+Avoid special characters in directory-name and ensure the directory exists and has the correct permissions!
+
+Disabling Shoutbox-Reset after reboot
+On default, the Shoutbox is cleared on a new startup. To disable this, you need to set the following line in /opt/piratebox/conf/piratebox.conf to no
+
+ # Reset Shoutbox on Startup?
+ RESET_CHAT="yes"
+If you want to cleanup your shoutbox, you can later run the following commands manually to empty the log:
+
+rm /opt/piratebox/www/cgi-bin/data.pso
+/opt/piratebox/bin/shoutbox_stuff.sh /opt/piratebox/www /opt/piratebox/conf/piratebox.conf
+Hostname
+Since PirateBox 1.0 there is a command in install_piratebox.sh ; this is the only thing needed.
+
+ /opt/piratebox/bin/install_piratebox.sh /opt/piratebox/conf/piratebox.conf hostname <new hostname>
+ 
+Before PirateBox 1.0: Change hostname in the file index.html /opt/piratebox/www/index.html
+
+ <iframe  width='650' frameBorder='0' src='http://piratebox.lan:8080'>Your browser does not supprt Iframes.. If you want to upload something, follow this <a href='http://piratebox.lan:8080'>Link</a></iframe>
+Custom Directory Listing
+How to customize your personal directory-listing is described on the Lighttpd wiki
+
+PHP for PirateBox
+Make sure your box has internet, see this howto for informations when you have a single-ethernet-port device like the MR3020.
+
+Login to you box using SSH or telnet, then the following lines to install php and dependencies
+
+/etc/init.d/piratebox nodns
+opkg update
+opkg -d ext install extendRoot-php lighttpd-mod-fastcgi
+That takes a small moment, then we need to add the corresponding configuration parts to the lighttpd configuration. Take care, that you copy&paste all of them at once:
+
+cat >/opt/piratebox/conf/lighttpd/fastcgi.conf <<EOF
+#-------------------- FAST CGI stuff
+
+server.modules += ( "mod_fastcgi" )
+fastcgi.server = (
+      ".php" => ((
+                      "bin-path" => "/usr/bin/php-cgi",
+                      "socket" => "/tmp/php.socket",
+                      "max-procs" => 1
+              ))
+)
+
+EOF
+echo 'include "/opt/piratebox/conf/lighttpd/fastcgi.conf"' >> /opt/piratebox/conf/lighttpd/lighttpd.conf
+echo "<?php phpinfo(); ?>" >> /opt/piratebox/www/phpinfo.php
+Now we can do a quick restart of the PirateBox scripts:
+
+/etc/init.d/piratebox restart
+Open up your browser and then, checkout http://piratebox.lan/phpinfo.php Attention, please keep in mind, that with this configuration even an uploaded PHP script would be executed. To restrict this, you can edit the /etc/php.ini file on your PirateBox and change the value from
+
+;doc_root = "/www"
+to
+
+doc_root = "<path to your php application>"
+In addition, you might need some more extentions to be installed (which isn't that easy to find out). This can be done with the command
+
+  opkg -d ext install php5-mod-//....//
+After that, you need to remove the ; in fron of the module-name in the dynamic extention section of /etc/php.ini.
+
+You can lay down you php files there or in subfolders now. You can lay down your php stuff on the USB-device and link to it. For example a link to my wiki located on the usb device:
+
+  ln -s /mnt/usb/PirateBox/wiki  /opt/piratebox/www/wiki
+Show connected clients
+Included since 0.3.1 There is a script, which greps the needed informations from “iw”. It was designed to run on OpenWRT, but it might work on laptops, too. If you want to use this, run the following command:
+
+  /opt/piratebox/bin/install_piratebox.sh /opt/piratebox/conf/piratebox.conf station_cnt 
+  
+That makes an entry into the crontab of the current user. It updates a station_cnt.txt file in /opt/piratebox/www every 2 minutes. On OpenWRT you have to ensure, that the Cron daemon runs:
+
+ /etc/init.d/cron enable && /etc/init.d/cron start 
+Add the following line in the index.html file
+
+ <div id="station" class="card"></div> 
+Note: if you try to do the activation on the RPi version, you need to execute the following command to enable Cron:
+
+sudo systemctl enable cronie
+sudo systemctl start cronie
+www offload
+This option is important for the OpenWRT users. You want a www folder on your USB stick?
+
+We are going to disable the script exchange_www.sh with PirateBox hotfix release 1.0.4 , even if the installation tells you to change something, it won't. The www_alt feature is disabled, please follow the instructions below.
+
+After finalizing your box, you can run the following set of commands while being connected via ssh. These commands will create a folder, where you can put your files to.
+
+ mkdir -p /opt/piratebox/share/content
+ ln -s /opt/piratebox/share/content  /opt/piratebox/www
+ chown -R nobody:nogroup /opt/piratebox/share/content
+ sed -i "s|#####HOST#####/|#####HOST#####/content|" /opt/piratebox/src/redirect.html.schema
+ . /opt/piratebox/conf/piratebox.conf
+ sed "s|#####HOST#####|${HOSTNAME}|" /opt/piratebox/src/redirect.html.schema > /opt/piratebox/www/redirect.html
+ mv /opt/piratebox/www/index.html /opt/piratebox/www/index_old.html
+ ln -s /opt/piratebox/www/redirect.html /opt/piratebox/www/index.html
+ sync
+After this, you can power off your PirateBox and put your content to the “content” folder.
+
+Bigger image file size for webdata
+How to create, format and mount .img files
+
+Changing MAC for Hostspot
+If you want a regular changing MAC address for you hostspot, you can implement the script which is found on OpenWrt forum. It is reported as working.
+
+Install a Torrent tracker software
+The linked guide describes how to install a Torrent tracker to your PirateBox. You find support in this forum topic.
