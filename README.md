@@ -1,4 +1,4 @@
 # PirateBox
-Clone of pirate box website as it shuts down.
+Clone of Pirate box. 
 
-View raspberry_pi:diy for instructions
+Unmaintained. 
